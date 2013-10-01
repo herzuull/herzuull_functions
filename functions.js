@@ -16,37 +16,49 @@ for (var i=0; i<list.length; i++) {
 /**
  * Ajouter des styles en dynamique
  */
-var style = document.createElement('style') ,
-	text_style = '#contener{position:relative;!important}';
 
-style.setAttribute('type', 'text/css');
-if (style.styleSheet) { //For ie
-	style.styleSheet.cssText = text_style;
-} else {
-	style.appendChild(document.createTextNode(text_style));
+/*
+ [modifier] Ajout de styles css dans le head d'un site
+ Kévin Goualch le 11 février 2013
+ Dans le cas où un style en ligne sur un élément soit supplanter par le site lui-même, il est possible d'ajouter une description css dans le head de la page. Il faudra alors ajouter !important à sa déclaration.
+ */
+var head = document.getElementsByTagName('head')[0],
+    s = document.createElement('style'),
+    css = 'tag.classe {attribut: "valeur"!important}' ;
+s.setAttribute('type', 'text/css');
+if (s.styleSheet) { // IE
+    s.styleSheet.cssText = css;
+} else { // the world
+    s.appendChild(document.createTextNode(css));
 }
-(document.getElementsByTagName('head')[0]).appendChild(mmmStyle);
+head.appendChild(s);
 
+/*
+ Kévin Goualch le 21/03/2013
+ Nouvelle version avec ajout dynamique de classe css
+ Il faut ajouter un objet sous forme d'objet json : {'.maclass': {'margin-top': '5px', 'background-color': '#fff'}}
+ **/
 function addCssRuleToHead (cssRule) {
-	var head = document.getElementsByTagName('head')[0],
-		s = document.createElement('style') ;
-		css = '' ;
-	for (var cssrulename in cssRule) {
-		if (!cssRule.hasOwnProperty(cssrulename) || !cssrulename in cssRule) continue ;
-		css += cssrulename+'{' ;
-		for (var cssattributes in cssRule[cssrulename]) {
-			css += cssattributes+': '+cssRule[cssrulename][cssattributes]+';' ;
-		}
-		css+='}';
-	}
-	s.setAttribute('type', 'text/css');
-	if (s.styleSheet) { // IE
-		s.styleSheet.cssText = css;
-	} else { // the world
-		s.appendChild(document.createTextNode(css));
-	}
-	head.appendChild(s);
+    var head = document.getElementsByTagName('head')[0],
+        s = document.createElement('style') ;
+    css =  ;
+    for (var cssrulename in cssRule) {
+        if (!cssRule.hasOwnProperty(cssrulename) || !cssrulename in cssRule) continue ;
+        css += cssrulename+'{' ;
+        for (var cssattributes in cssRule[cssrulename]) {
+            css += cssattributes+': '+cssRule[cssrulename][cssattributes] ;
+        }
+        css+='}';
+    }
+    s.setAttribute('type', 'text/css');
+    if (s.styleSheet) { // IE
+        s.styleSheet.cssText = css;
+    } else { // the world
+        s.appendChild(document.createTextNode(css));
+    }
+    head.appendChild(s);
 }
+
 
 addCssRuleToHead({
 	'#lbSpacer': {
@@ -85,20 +97,20 @@ document.body.style['overflow-x'] = 'hidden' ;
 		this.domObject = domOverlay ;
 		var divIndication = document.createElement('div') ;
 		divIndication.innerHTML = 'Clickez pour fermer';
-		divIndication.setAttribute('id', 'mmm_indication_overlay');
+		divIndication.setAttribute('id', 'indication_overlay');
 		document.body.appendChild(divIndication);
 		var style = document.createElement('style') ,
-		cssText = '#mmm_indication_overlay {background-color:#ddd;position:"absolute";top:0;left:0;width:200px;height:50px;border:1px solid #444;border-radius:5px;}' ;
-		cssText = '#mmm_indication_overlay:after{content: "\\25be";color: #444}' ;
+			cssText = '#indication_overlay {background-color:#ddd;position:"absolute";top:0;left:0;width:200px;height:50px;border:1px solid #444;border-radius:5px;}' ;
+		cssText = '#indication_overlay:after{content: "\\25be";color: #444}' ;
 		style.setAttribute('type', 'text/css');
 		if (style.styleSheet) { //For ie
-		style.styleSheet.cssText = cssText ;
+			style.styleSheet.cssText = cssText ;
 		} else {
-		var textNode = document.createTextNode(cssText);
-		style.appendChild(textNode);
+			var textNode = document.createTextNode(cssText);
+			style.appendChild(textNode);
 		}
 		var h = document.getElementsByTagName('head')[0];
-		h.appendChild(style);
+			h.appendChild(style);
 	};
 	
 	Overlay.prototype = {
@@ -133,51 +145,15 @@ document.body.style['overflow-x'] = 'hidden' ;
 		}
 	}
 	
-	window.mmm_overlay = new Overlay() ;
+	window.overlay = new Overlay() ;
 	
 })(window);
 
-/*
-[modifier] Ajout de styles css dans le head d'un site
-Kévin Goualch le 11 février 2013
-Dans le cas où un style en ligne sur un élément soit supplanter par le site lui-même, il est possible d'ajouter une description css dans le head de la page. Il faudra alors ajouter !important à sa déclaration.
-*/
-var head = document.getElementsByTagName('head')[0], 
-s = document.createElement('style'),
-css = 'tag.classe {attribut: 'valeur'!important}' ;
-s.setAttribute('type', 'text/css');
-if (s.styleSheet) { // IE
-	s.styleSheet.cssText = css;
-} else { // the world
-	s.appendChild(document.createTextNode(css));
-}
-head.appendChild(s);
-
-/*
-Kévin Goualch le 21/03/2013
-Nouvelle version avec ajout dynamique de classe css
-Il faut ajouter un objet sous forme d'objet json : {'.maclass': {'margin-top': '5px', 'background-color': '#fff'}}
-**/
-function addCssRuleToHead (cssRule) {
-	var head = document.getElementsByTagName('head')[0],
-	s = document.createElement('style') ;
-	css =  ;
-	for (var cssrulename in cssRule) {
-		if (!cssRule.hasOwnProperty(cssrulename) || !cssrulename in cssRule) continue ;
-		css += cssrulename+'{' ;
-		for (var cssattributes in cssRule[cssrulename]) {
-			css += cssattributes+': '+cssRule[cssrulename][cssattributes] ;
-		}
-		css+='}';
-	}
-	s.setAttribute('type', 'text/css');
-	if (s.styleSheet) { // IE
-		s.styleSheet.cssText = css;
-	} else { // the world
-		s.appendChild(document.createTextNode(css));
-	}
-	head.appendChild(s);
-}
+overlay.show(); // Displays overlay on the whole page.
+overlay.hide(); // hide current overlay.
+overlay.click(function(e){console.log(e.target);}); // make a click event over the overlay, and execute a callback function
+overlay.over(function(e){console.log(e.target);}); // Make an mouseover event over the overlay,  and execute a callback function
+overlay.out(function(e){console.log(e.target);}); // Make an mouseout event over the overlay,  and execute a callback function
 
 /*
 [modifier] Récupération de style calculé (via les classes css)
