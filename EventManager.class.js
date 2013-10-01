@@ -50,74 +50,83 @@
 	permettant ainsi de ne pas perdre le scope d'utilisation.
 	
 */
-(function(window) {
+(function(win, undefined) {
 
-	if (typeof window.mmmAdTkEM != 'undefined') return ;
-	/** event object **/
-	var EventManager = function() {
-		this.instance = null ;
-		if (EventManager.caller != EventManager.i) {
-			throw new Error("Can't instanciate this way !");
-		}
-		this.eventPool = [] ;
-		this.eventParameters = [] ;
-	};
+	win.EventManager = win.EventManager || {
+		/** event manager section **/
+		eventsPool : {} , // event pool
+		eventCalled : {} , // event allready called
+		callbackParameters : {} , // callback parameters
+		// Ajouter un event personalisé
+		RegisterUserEvent : function(eventName, callbackFunction, callbackParameters) {
 
-	EventManager.i = function() {
-		if (this.instance == null) {
-			this.instance = new EventManager();
-		}
-		return this.instance ;
-	};
-
-	EventManager.prototype.registerEvent = function(eventName, fn, eventParameters) {
-
-		if (typeof this.eventPool[eventName] == 'undefined') {
-			this.eventPool[eventName] = [] ;
-		}
-
-		if (isUndefined(eventParameters) == false
-		 && typeof eventParameters != 'boolean') {
-			if (!hasOwnProperty(this.eventParameters,eventName)) {
-				this.eventParameters[eventName] = [] ;
+			if (typeof this.eventsPool[eventName] == 'undefined') {
+				//console.warn('EM >> REGISTER '+eventName+' for the first time ');
+				this.eventsPool[eventName] = [] ;
+			} else {
+				//console.warn('EM >> REGISTER '+eventName+' exists, must call it once !');
 			}
-			var fnId = (this.eventParameters[eventName].length + 1) - 1  ;
-			this.eventParameters[eventName][fnId] = eventParameters ;
-		}
 
-		// avoid stack function for an event
-		if (typeof eventParameters == 'boolean'
-			&& eventParameters === false
-			&& this.eventPool[eventName].length > 0) {
-			return ;
-		}
-
-		this.eventPool[eventName].push(fn) ;
-	};
-
-	EventManager.prototype.callEvent = function(eventName) {
-		
-		if (!this.eventPool[eventName]) {
-			return ;
-		}
-		
-		var params = null ;
-		for (var fnId in this.eventPool[eventName]) {
-			if (!isUndefined(eventName) 
-			&& hasProperty(this.eventParameters[eventName], fnId)) {
-				params = this.eventParameters[eventName][fnId] ;
+			if (callbackParameters && typeof callbackParameters != 'boolean') {
+				if (!this.callbackParameters[eventName]) {
+					this.callbackParameters[eventName] = [] ;
+				}
+				this.callbackParameters[eventName][this.callbackParameters[eventName].length] = callbackParameters ;
 			}
-			if (typeof this.eventPool[eventName][fnId] == 'function')
-				this.eventPool[eventName][fnId](params, eventName);
+
+			if (typeof callbackParameters == 'boolean'
+				&& callbackParameters === false
+				&& this.eventsPool[eventName].length > 0)
+				return ;
+
+			this.eventsPool[eventName].push(callbackFunction) ;
+
+			if (this.eventCalled[eventName]) {
+				//console.warn('EM >> CALL '+eventName+' was allready called, then, call once ! ');
+				this.CallUserEvent(eventName) ;
+			}
+		},
+		// Appeller un event personalisé
+		CallUserEvent : function(eventName, facultativeParameters) {
+			//console.log('EM >> CALL : '+eventName);
+			this.eventCalled[eventName] = true ;
+			if (!this.eventsPool[eventName]) {
+				//console.warn('EM >> CALL '+eventName+' but wasnt registered, tip it to be auto called when it will be registered ');
+				return true ;
+			} else {
+				//console.warn('EM >> CALL '+eventName+' exists, treat it normaly ');
+			}
+
+			var scope = null ;
+			for (var fnIndex in this.eventsPool[eventName]) {
+
+				if (!this.eventsPool[eventName][fnIndex])
+					continue ;
+
+				else
+				if (this.eventsPool[eventName][fnIndex]
+					&& this.callbackParameters[eventName]
+					&& this.callbackParameters[eventName][fnIndex])
+					scope = this.callbackParameters[eventName][fnIndex] ;
+
+				if (typeof this.eventsPool[eventName][fnIndex] == 'function')
+					this.eventsPool[eventName][fnIndex](scope, eventName, facultativeParameters);
+			}
+		},
+		// Supprimer un event personalisé
+		DeleteEventTkEvent : function(eventName) { this.eventsPool[eventName] = null ; this.callbackParameters[eventName] = null ; },
+		// Ajouter un event système
+		RegisterSystemEvent : function(objectHandler, eventName, callbackFunction, callbackParameters) {
+			if (eventName == 'load' && document.body && document.readyState == 'complete') { (callbackFunction)(callbackParameters); }
+			else {
+				var object = objectHandler[0] || objectHandler ;
+				if (object.addEventListener) object.addEventListener(eventName, function(e){(callbackFunction)(callbackParameters, e);}, false);
+				else if (object.attachEvent) object.attachEvent('on'+eventName, function(e){(callbackFunction)(callbackParameters, e);});
+				else if (object['on'+eventName]) object['on'+eventName](object, callbackFunction, callbackParameters);
+				else if (window.console && window.console.warn) window.console.warn('No '+eventName+' on '+objectHandler.toString());
+			}
 		}
-	};
-
-	EventManager.prototype.removeEvent = function(eventName) {
-		this.eventPool[eventName] = null ;
-		this.eventParameters[eventName] = null ;
-	};
-
-	window.EM = EventManager.i() ;
+	} ;
 	
 })(window);
 
